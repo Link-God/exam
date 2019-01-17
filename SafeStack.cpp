@@ -1,37 +1,56 @@
-#include <mutex>
+#include <iostream>
+#include <exception>
 #include <stack>
-#include <thread>
+#include <mutex>
+#include <queue>
+#include <memory>
 
-template <typename T>
-class  SafeStack
+struct empty_stack : std::exception
 {
-	std::mutex Mutex;
-	std::stack<T> Stack;
-public:
-	SafeStack() {}
-	T Pop()
-	{
-		std::lock_guard<std::mutex> lg(Mutex);
-		if (Stack.empty()) throw std::logic_error "empty stack";
-		T temp = Stack.top();
-		Stack.pop();
-		return temp;
+const char *what() const throw();
+};
 
-	}
-	void Push(const T& Value)
-	{
-		std::lock_guard<std::mutex> lg(Mutex);
-		Stack.push(Value);
-	}
-	bool TryPop()
-	{
-		std::defer_lock_t t;
-		std::unique_lock<std::mutex> lg(Mutex, t);
-		if (lg.try_lock() && !Stack.empty())
-		{
-			Stack.pop();
-			return true;
-		}
-		return false;
-	}
+template<typename t>
+class threadsafe_stack
+{
+private:
+std::stack<t>data;
+mutable std::mutex m;
+
+public:
+
+threadsafe_stack() {}
+
+threadsafe_stack(const threadsafe_stack&other)
+{
+	std::lock_guard<std::mutex>lock(other.m);
+	data = other.data;
+}
+threadsafe_stack&operator=(const threadsafe_stack&) = delete;
+void push(t new_value)
+{
+	std::lock_guard<std::mutex>lock(m);
+	data.push(std::move(new_value)); 
+}
+std::shared_ptr<t> pop()
+{
+	std::lock_guard<std::mutex>lock(m);
+	if (data.empty()) throw empty_stack(); 
+	std::shared_ptr<t> const res(
+		std::make_shared<t>(std::move(data.top())));
+	data.pop();
+	return res;
+}
+void pop(t&value)
+{
+	std::lock_guard<std::mutex> lock(m);
+	if (data.empty()) throw empty_stack();
+	value = std::move(data.top());
+	data.pop();
+}
+bool empty()const
+{
+	std::lock_guard<std::mutex> lock(m);
+	return data.empty();
+}
 };
