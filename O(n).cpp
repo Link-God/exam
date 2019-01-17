@@ -1,28 +1,29 @@
 #include <iterator>
-#include <unordered_set>
+#include <iterator>
+#include <unordered_map>
 
 template <typename Iterator, typename T>
 std::pair<bool, std::pair<Iterator, Iterator>> find_two_elements_with_sum(Iterator first, Iterator last, T c)
 {
-	std::unordered_set<T> my_set;
+	std::unordered_map<T,Iterator> my_map;
 	std::pair<bool, std::pair<Iterator, Iterator>> p;
 	Iterator one = last;
 	Iterator two = last;
-	p = std::make_pair(false, std::make_pair(one, two));
+	p = std::make_pair<bool, std::pair<Iterator, Iterator>>(false, std::make_pair<Iterator, Iterator>(one, two));
 	for (auto i = first; i != last; ++i)
 	{
-		auto pair = std::make_pair(*i, i);
-		if (my_set.find(pair) != my_set.end())
+		auto f = my_map.find(*i);
+		if (f != my_map.end())
 		{
 			p.first = true;
 			one = i;
-			two = pair.second;
-			p.second = std::make_pair(one, two);
+			two = f->second;
+			p.second = std::make_pair<Iterator, Iterator>(one, two);
 			return p;
 		}
 		else
 		{
-			my_set.insert(std::make_pair(c - (*i), i));
+			my_map.insert(std::make_pair<T, Iterator>(c - (*i), i));
 		}
 	}
 	return p;
