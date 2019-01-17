@@ -11,17 +11,18 @@ std::pair<bool, std::pair<Iterator, Iterator>> find_two_elements_with_sum(Iterat
 	p = std::make_pair(false, std::make_pair(one, two));
 	for (auto i = first; i != last; ++i)
 	{
-		if (my_set.find(*i) != my_set.end())
+		auto pair = std::make_pair(*i, i);
+		if (my_set.find(pair) != my_set.end())
 		{
 			p.first = true;
 			one = i;
+			two = pair.second;
 			p.second = std::make_pair(one, two);
 			return p;
 		}
 		else
 		{
-			my_set.insert(c - (*i));
-			two = i;
+			my_set.insert(std::make_pair(c - (*i), i));
 		}
 	}
 	return p;
