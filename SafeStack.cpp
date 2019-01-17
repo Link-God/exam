@@ -7,7 +7,13 @@
 
 struct empty_stack : std::exception
 {
-const char *what() const throw();
+	std::string msg;
+	empty_stack(const std::string& msg) :msg(msg)
+	{}
+	const char *what() const noexcept
+	{
+		return msg;
+	}
 };
 
 template<typename t>
@@ -44,7 +50,7 @@ std::shared_ptr<t> pop()
 void pop(t&value)
 {
 	std::lock_guard<std::mutex> lock(m);
-	if (data.empty()) throw empty_stack();
+	if (data.empty()) throw empty_stack("error");
 	value = std::move(data.top());
 	data.pop();
 }
