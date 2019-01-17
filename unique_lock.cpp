@@ -6,19 +6,13 @@ class unique_lock
 	bool is_lock;
 public:
 	unique_lock() 
-	{
-		m_ = nullptr;
-		is_lock = false;
-	}
+		: m_(nullptr), is_lock(false)
+	{}
 
 	~unique_lock()
 	{
 		if (is_lock) 
-		{
-			(*m_).unlock();
-			is_lock = false;
-			m_ = nullptr;
-		}
+			m_->unlock();
 	}
 
 	unique_lock(unique_lock&& other) noexcept : m_(other.m_)
@@ -48,21 +42,32 @@ public:
 
 	void lock()
 	{
-		(*m_).lock();
+		m_->lock();
 		is_lock = true;
 	}
 
 	void unlock()
 	{
-		(*m_).unlock();
-		is_lock = false;
+		if(m_ && is_lock)
+		{
+			m_->unlock();
+			is_lock = false;
+		}
+		//else throw
 	}
 
 	unique_lock<Mutex>& operator=(unique_lock<Mutex>&& other) 
 	{
-		(*m_)=other.m_;
-		is_lock = other.is_lock;
-		return * this;
+		if (this != std::addressof(other))
+			{
+			if (is_lock)
+				m_->unlock();
+			m_ = other.m_;
+			is_lock = other.is_lock;
+			other.m_ = nullptr;
+			other.is_lock = false;
+			}
+		return (*this);
 	}
 };
 
