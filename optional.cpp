@@ -29,7 +29,7 @@ public:
 	{
 		if (!ok)
 		{
-			throw(std::bad_optional_access);
+			throw(std::bad_optional_access{});
 			// ??
 		}
 		else
